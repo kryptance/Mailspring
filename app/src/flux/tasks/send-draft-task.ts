@@ -50,6 +50,7 @@ function applyExtensionTransforms(draft: Message, recipient: Contact) {
 
 export class SendDraftTask extends Task {
   static forSending(d: Message, { silent }: { silent?: boolean } = {}) {
+    console.log(JSON.stringify(d))
     const task = new SendDraftTask({});
     task.draft = d.clone();
     task.headerMessageId = task.draft.headerMessageId;

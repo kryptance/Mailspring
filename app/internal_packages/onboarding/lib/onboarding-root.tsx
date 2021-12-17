@@ -19,7 +19,6 @@ import InitialSubscriptionPage from './page-initial-subscription';
 const PageComponents = {
   welcome: WelcomePage,
   tutorial: TutorialPage,
-  authenticate: AuthenticatePage,
   'account-choose': AccountChoosePage,
   'account-settings': AccountSettingsPage,
   'account-settings-gmail': AccountSettingsPageGmail,

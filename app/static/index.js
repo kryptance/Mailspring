@@ -1,6 +1,6 @@
-window.eval = global.eval = function() {
-  throw new Error('Sorry, N1 does not support window.eval() for security reasons.');
-};
+// window.eval = global.eval = function() {
+//   throw new Error('Sorry, N1 does not support window.eval() for security reasons.');
+// };
 
 var util = null;
 

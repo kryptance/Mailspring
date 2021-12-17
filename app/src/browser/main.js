@@ -318,6 +318,12 @@ const start = () => {
 
   app.on('open-url', onOpenUrlBeforeReady);
   app.on('open-file', onOpenFileBeforeReady);
+
+  // eslint-disable-next-line
+  // const RestService = require(path.join(options.resourcePath, 'src', 'restservice'))
+  //     .default;
+  // new RestService().start()
+
   app.on('ready', () => {
     app.removeListener('open-file', onOpenFileBeforeReady);
     app.removeListener('open-url', onOpenUrlBeforeReady);
