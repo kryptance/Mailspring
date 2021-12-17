@@ -16,10 +16,10 @@ install:
   - ps: npm config set msvs_version 2015
 
   # Extract the codesigning certs, encrypted private ssh key
-  - ps: |
-      C:\OpenSSL-Win32\bin\openssl.exe aes-256-cbc -K $env:encrypted_faf2708e46e2_key -iv $env:encrypted_faf2708e46e2_iv -in app/build/resources/certs.tar.enc -out app/build/resources/certs.tar -d;
-      mkdir app/build/resources/certs;
-      tar xvf app/build/resources/certs.tar --directory=app/build/resources/;
+#  - ps: |
+#      C:\OpenSSL-Win32\bin\openssl.exe aes-256-cbc -K $env:encrypted_faf2708e46e2_key -iv $env:encrypted_faf2708e46e2_iv -in app/build/resources/certs.tar.enc -out app/build/resources/certs.tar -d;
+#      mkdir app/build/resources/certs;
+#      tar xvf app/build/resources/certs.tar --directory=app/build/resources/;
 
   # Clone the submodule
   - ps: |
@@ -39,16 +39,16 @@ before_deploy:
   - ps: Get-ChildItem .\app\dist\*.nupkg | % { Push-AppveyorArtifact $_.FullName -FileName "win-ia32/$($_.Name)" -DeploymentName s3-deployment }
   - ps: Get-ChildItem .\app\dist\RELEASES | % { Push-AppveyorArtifact $_.FullName -FileName "win-ia32/$($_.Name)" -DeploymentName s3-deployment }
 
-deploy:
-  - provider: S3
-    name: s3-deployment
-    access_key_id: AKIAJQWOM4SPSY3TXI5Q
-    secret_access_key:
-      secure: XlLzz7sdvrtgi4g459NvxLfrH/+hOutb+0Osz29unfi4Zcw9N8H8SEaq6m3ZeWc+
-    region: us-east-1
-    bucket: mailspring-builds
-    folder: 'client/$(commit)'
-    set_public: true
+#deploy:
+#  - provider: S3
+#    name: s3-deployment
+#    access_key_id: AKIAJQWOM4SPSY3TXI5Q
+#    secret_access_key:
+#      secure: XlLzz7sdvrtgi4g459NvxLfrH/+hOutb+0Osz29unfi4Zcw9N8H8SEaq6m3ZeWc+
+#    region: us-east-1
+#    bucket: mailspring-builds
+#    folder: 'client/$(commit)'
+#    set_public: true
 
 # Stop Appveyor from "Discovering Tests" forever
 test: off
