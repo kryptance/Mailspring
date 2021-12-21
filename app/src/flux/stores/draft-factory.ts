@@ -64,7 +64,7 @@ class DraftFactory {
       version: 0,
       unread: false,
       starred: false,
-      headerMessageId: `${uuidv4().toUpperCase()}@getmailspring.com`,
+      headerMessageId: `${uuidv4().toUpperCase()}@befundbote.de`,
       from: [account.defaultMe()],
       date: new Date(),
       draft: true,

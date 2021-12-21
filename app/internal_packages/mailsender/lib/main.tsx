@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {SendDraftTask} from "../../../src/flux/tasks/send-draft-task";
-import {Actions, ComponentRegistry, DraftFactory, ModalStore, WorkspaceStore} from "mailspring-exports";
-import {io} from "socket.io-client";
+import {Actions, ComponentRegistry, DraftFactory, Message, ModalStore, WorkspaceStore} from "mailspring-exports";
+import openSocket, {io, Socket} from "socket.io-client";
 import {Composer as ComposerExtensionRegistry} from "../../../src/registries/extension-registry";
 
 import {sendMessage, subscribe} from "./broker";
@@ -59,22 +59,36 @@ export function activate() {
 
     localStorage.debug = '*';
 
-    const socket = io("wss://broker.kryptance.de:30000");
+    const socket = openSocket("http://broker-open.befundbote.de", { transports: ['websocket']})
+    // const socket = io("ws://localhost:30000");
 
     ComposerExtensionRegistry.register({
         name: 'mailsender',
-        onSendSuccess: (draft) => {
+        onSendSuccess: (draft: Message) => {
             const currentKey = localStorage.getItem("cryptoKey")
             console.log(draft)
-            sendMessage(socket, currentKey, "email-sent", {} as EmailSentData)
+            sendMessage(socket, currentKey, "email-sent", {
+                email: draft.to[0].email,
+                emailId: draft.headerMessageId
+            } as EmailSentData)
         }
     })
 
+    socket.on("connect_error", (err) => {
+        console.log("CONNECTION ERROR")
+        console.log(err.stack)
+        setTimeout(() => {
+            socket.connect();
+        }, 10000);
+    });
+
     socket.on("connect", () => {
+        console.log("CONNECTED.....")
         subscribe(socket, "email", getKeyFromStorage, (data: EmailData) => {
             console.log(data.to)
 
             DraftFactory.createDraft({
+                id: data.id,
                 subject: data.subject,
                 to: data.to.map(createContact),
                 cc: data.cc.map(createContact),
@@ -84,19 +98,13 @@ export function activate() {
             }).then(draft => {
                 const task = SendDraftTask.forSending(draft);
                 Actions.queueTask(task)
-                task.onSuccess()
-
-                sendMessage(socket, getKeyFromStorage(), "email-queued", {} as EmailQueuedData)
+                sendMessage(socket, getKeyFromStorage(), "email-queued", {
+                    id: data.id,
+                    emailId: draft.headerMessageId
+                } as EmailQueuedData)
             })
         })
     });
-
-// // handle the event sent with socket.emit()
-//     socket.on("greetings", (elem1, elem2, elem3) => {
-//         console.log(elem1, elem2, elem3);
-//     });
-
-    console.log("LISTENING.....")
 }
 
 export function deactivate() {

@@ -15,18 +15,21 @@ export function subscribe(socket: Socket<DefaultEventsMap, DefaultEventsMap>, to
     hash(getKey()).then(address => {
         socket.send({
             topic: 'subscribe',
+            destination: address,
             body: {destination: address, topic: topic} as Subscription
         } as SocketMessage)
     })
 
     socket.on("message", dataRaw => {
-        const currentKey = getKey()
-
-        const key = new Uint8Array(aesjs.utils.hex.toBytes(currentKey))
-
         const message = dataRaw as SocketMessage
-        const encrypted = message.body as EncryptedObject
-        listener(decrypt(encrypted, key))
+        if(message.topic === topic) {
+            const currentKey = getKey()
+
+            const key = new Uint8Array(aesjs.utils.hex.toBytes(currentKey))
+
+            const encrypted = message.body as EncryptedObject
+            listener(decrypt(encrypted, key))
+        }
     });
 }
 
@@ -53,7 +56,7 @@ function encrypt(value: any, key: Uint8Array): EncryptedObject {
     const iv = randomBytes(16)
 
     const text = JSON.stringify(value);
-    let textBytes = aesjs.utils.utf8.toBytes(text) as Uint8Array
+    const textBytes = aesjs.utils.utf8.toBytes(text) as Uint8Array
 
     const padding = 16 - (textBytes.length % 16)
 
