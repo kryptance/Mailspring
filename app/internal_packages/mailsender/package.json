@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "socket.io-client": "^4.4.0",
-    "aes-js": "^3.1.2"
+    "aes-js": "^3.1.2",
+    "befundbotejs": "link:../../../../befundbotejs"
   }
 }

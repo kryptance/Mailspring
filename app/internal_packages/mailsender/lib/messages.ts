@@ -2,13 +2,14 @@
 // email-queued .......................
 
 export type EmailQueuedData = {
-    id: string,
+    befundboteCode: string,
     emailId: string
 }
 
 // email-sent ..........................
 
 export type EmailSentData = {
+    befundboteCode: string,
     email: string,
     emailId: string
 }
@@ -21,13 +22,13 @@ export type EmailContact = {
 }
 
 export type EmailData = {
-    id: string,
     subject: string,
     to: EmailContact[],
     cc: EmailContact[],
     bcc: EmailContact[],
     replyTo: EmailContact[],
-    body: string
+    body: string,
+    befundboteCode: string
 }
 
 // ..................................
