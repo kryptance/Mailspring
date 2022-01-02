@@ -2,7 +2,7 @@
 
 import qs from 'querystring';
 import crypto from 'crypto';
-import uuidv4 from 'uuid/v4';
+import { v4 as uuidv4 } from 'uuid';
 import { Account, AccountStore, IdentityStore, MailsyncProcess, localized } from 'mailspring-exports';
 import MailspringProviderSettings from './mailspring-provider-settings.json';
 import MailcoreProviderSettings from './mailcore-provider-settings.json';
