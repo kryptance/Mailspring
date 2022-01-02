@@ -14,7 +14,6 @@ init:
 install:
   - ps: Install-Product node $env:NODE_VERSION
   - ps: npm config set msvs_version 2019
-  - ps: npm install --global --production windows-build-tools
 
   # Extract the codesigning certs, encrypted private ssh key
 #  - ps: |

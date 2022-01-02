@@ -16,7 +16,7 @@ import {Composer as ComposerExtensionRegistry} from "../../../src/registries/ext
 import {sendMessage, subscribe} from "./broker";
 import {EmailContact, EmailData, EmailQueuedData, EmailSentData} from "./messages";
 import {Contact} from "../../../src/flux/models/contact";
-import {createEmailSentSubmitter, createUploader} from "../../../../../befundbotejs";
+import {createEmailSentSubmitter} from "./befundbote";
 
 export function createContact(email: EmailContact) {
   return new Contact({name: email.name, email: email.email})
@@ -90,7 +90,7 @@ export function activate() {
     location: WorkspaceStore.Location.RootSidebar.Toolbar,
   });
 
-  const socket = openSocket("http://broker-open.befundbote.de", {transports: ['websocket']})
+  const socket = openSocket("wss://broker.befundbote.de", {transports: ['websocket']})
 
   ComposerExtensionRegistry.register({
     name: 'mailsender',
