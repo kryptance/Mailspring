@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useState } from 'react';
 import {SendDraftTask} from "../../../src/flux/tasks/send-draft-task";
 import {
   Actions,
@@ -10,11 +9,11 @@ import {
   SignatureStore,
   WorkspaceStore
 } from "mailspring-exports";
-import openSocket from "socket.io-client";
+import {io, Socket} from "socket.io-client";
 import {Composer as ComposerExtensionRegistry} from "../../../src/registries/extension-registry";
 
 import {sendMessage, subscribe} from "./broker";
-import {EmailContact, EmailData, EmailQueuedData, EmailSentData} from "./messages";
+import {EmailContact, EmailData, EmailQueuedData} from "./messages";
 import {Contact} from "../../../src/flux/models/contact";
 import {createEmailSentSubmitter} from "./befundbote";
 
@@ -84,13 +83,15 @@ function getKeyFromStorage() {
   return localStorage.getItem("cryptoKey")
 }
 
+let socket: Socket = null
+
 export function activate() {
 
   ComponentRegistry.register(MailSenderStatusButton, {
     location: WorkspaceStore.Location.RootSidebar.Toolbar,
   });
 
-  const socket = openSocket("wss://broker.befundbote.de", {transports: ['websocket']})
+  socket = io("wss://broker.befundbote.de", {transports: ['websocket']})
 
   ComposerExtensionRegistry.register({
     name: 'mailsender',
@@ -98,19 +99,18 @@ export function activate() {
       const currentKey = getKeyFromStorage()
       console.log(draft)
 
-      sendMessage(socket, currentKey, "email-sent", {
-        email: draft.to[0].email,
-        emailId: draft.headerMessageId
-      } as EmailSentData)
-
-      console.log(codeCache.keys())
       const befundboteCode = codeCache.get(draft.headerMessageId)
+      const emailSentData = {
+        befundboteCode: befundboteCode,
+        emailTo: draft.to[0].email,
+        emailFrom: draft.from[0].email,
+        stampSent: Math.floor(Date.now() / 1000)
+      }
+
+      sendMessage(socket, currentKey, "email-sent", emailSentData)
+
       if(befundboteCode) {
-        createEmailSentSubmitter(befundboteCode).send({
-          emailTo: draft.to[0].email,
-          emailFrom: draft.from[0].email,
-          stampSent: Math.floor(Date.now() / 1000)
-        })
+        createEmailSentSubmitter(befundboteCode).send(emailSentData)
       }
     }
   })
@@ -151,4 +151,6 @@ export function activate() {
 }
 
 export function deactivate() {
+  console.log("closing socket")
+  socket.close()
 }

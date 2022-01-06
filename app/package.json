@@ -1,10 +1,10 @@
 {
   "name": "mailspring",
-  "productName": "Mailspring",
+  "productName": "EmailAgent",
   "version": "1.9.3",
   "repository": {
     "type": "git",
-    "url": "git://github.com/foundry376/mailspring.git"
+    "url": "git://github.com/kryptance/mailspring.git"
   },
   "commitHash": "COMMIT_INSERTED_DURING_PACKAGING",
   "description": "The best email app for people and teams at work",

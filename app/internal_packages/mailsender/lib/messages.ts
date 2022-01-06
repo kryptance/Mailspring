@@ -6,14 +6,6 @@ export type EmailQueuedData = {
     emailId: string
 }
 
-// email-sent ..........................
-
-export type EmailSentData = {
-    befundboteCode: string,
-    email: string,
-    emailId: string
-}
-
 // email ..........................
 
 export type EmailContact = {

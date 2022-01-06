@@ -16,8 +16,8 @@ interface KeySet {
  * and every key we want to access.
  */
 class KeyManager {
-  SERVICE_NAME = AppEnv.inDevMode() ? 'Mailspring Dev' : 'Mailspring';
-  KEY_NAME = 'Mailspring Keys';
+  SERVICE_NAME = AppEnv.inDevMode() ? 'EmailAgent Dev' : 'EmailAgent';
+  KEY_NAME = 'EmailAgent Keys';
 
   async deleteAccountSecrets(account: Account) {
     try {

@@ -76,7 +76,7 @@ class SystemStartServiceDarwin extends SystemStartServiceBase {
   }
 
   _launcherPath() {
-    return path.join('/', 'Applications', 'Mailspring.app', 'Contents', 'MacOS', 'Mailspring');
+    return path.join('/', 'Applications', 'EmailAgent.app', 'Contents', 'MacOS', 'EmailAgent');
   }
 
   _plistPath() {
@@ -148,7 +148,7 @@ class SystemStartServiceWin32 extends SystemStartServiceBase {
       'Start Menu',
       'Programs',
       'Startup',
-      'Mailspring.lnk'
+      'EmailAgent.lnk'
     );
   }
 }
@@ -192,12 +192,12 @@ class SystemStartServiceLinux extends SystemStartServiceBase {
   }
 
   _launcherPath() {
-    return path.join('/', 'usr', 'share', 'applications', 'Mailspring.desktop');
+    return path.join('/', 'usr', 'share', 'applications', 'EmailAgent.desktop');
   }
 
   _shortcutPath() {
     const configDir = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
-    return path.join(configDir, 'autostart', 'Mailspring.desktop');
+    return path.join(configDir, 'autostart', 'EmailAgent.desktop');
   }
 }
 

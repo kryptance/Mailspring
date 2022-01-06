@@ -115,9 +115,9 @@ export default class MailspringWindow extends EventEmitter {
     // taskbar's icon. See https://github.com/atom/atom/issues/4811 for more.
     if (process.platform === 'linux') {
       if (!WindowIconPath) {
-        WindowIconPath = path.resolve('/usr', 'share', 'pixmaps', 'mailspring.png');
+        WindowIconPath = path.resolve('/usr', 'share', 'pixmaps', 'bb.png');
         if (!fs.existsSync(WindowIconPath)) {
-          WindowIconPath = path.resolve(this.resourcePath, 'static', 'images', 'mailspring.png');
+          WindowIconPath = path.resolve(this.resourcePath, 'static', 'images', 'bb.png');
         }
       }
       browserWindowOptions.icon = WindowIconPath;
