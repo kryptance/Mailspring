@@ -1,44 +1,76 @@
 import aesjs from 'aes-js';
-import {DefaultEventsMap} from "@socket.io/component-emitter";
-import {Socket} from "socket.io-client";
+import {io, Socket} from "socket.io-client";
 import {range} from "underscore";
 
 export function fromHex(hexString: string) {
     return Buffer.from(hexString, 'hex');
 }
 
-export function subscribe(socket: Socket<DefaultEventsMap, DefaultEventsMap>, topic: SubscriptionTopic,
-                          getKey: () => string,
-                          listener: (messageData: any) => void) {
+export class Broker {
+    socket: Socket
+    fnConnect: () => void
 
-    // TODO: this will be a problem if user changes key
-    hash(getKey()).then(address => {
-        socket.send({
-            topic: 'subscribe',
-            destination: address,
-            body: {destination: address, topic: topic} as Subscription
-        } as SocketMessage)
-    })
+    constructor() {
+    }
 
-    socket.on("message", dataRaw => {
-        const message = dataRaw as SocketMessage
-        if(message.topic === topic) {
-            const currentKey = getKey()
+    onConnect(fn: () => void) {
+        this.fnConnect = fn
+    }
 
-            const key = new Uint8Array(aesjs.utils.hex.toBytes(currentKey))
-
-            const encrypted = message.body as EncryptedObject
-            listener(decrypt(encrypted, key))
+    connect() {
+        if(this.socket) {
+            this.socket.close()
         }
-    });
+        this.socket = io("wss://broker.befundbote.de", {transports: ['websocket']})
+
+        this.socket.on("connect_error", (err) => {
+            console.log("CONNECTION ERROR")
+            console.log(err.stack)
+            setTimeout(() => {
+                this.socket.connect();
+            }, 10000);
+        })
+
+        this.fnConnect && this.fnConnect()
+    }
+
+    subscribe(topic: SubscriptionTopic,
+              getKey: () => string,
+              listener: (messageData: any) => void) {
+        // TODO: this will be a problem if user changes key
+        let key = getKey()
+
+        hash(key).then(address => {
+            this.socket.send({
+                topic: 'subscribe',
+                destination: address,
+                body: {destination: address, topic: topic} as Subscription
+            } as SocketMessage)
+        })
+        this.socket.on("message", dataRaw => {
+            const message = dataRaw as SocketMessage
+            if(message.topic === topic) {
+                const key = new Uint8Array(aesjs.utils.hex.toBytes(getKey()))
+                const encrypted = message.body as EncryptedObject
+                listener(decrypt(encrypted, key))
+            }
+        });
+    }
+
+    sendMessage(key: string, topic: SubscriptionTopic, object: any) {
+        const body = encrypt(object, fromHex(key))
+        hash(key).then(address => {
+            address && this.socket.send({body: body, topic: topic, destination: address} as SocketMessage)
+        })
+    }
+
+    close() {
+        this.socket.close()
+    }
+
 }
 
-export function sendMessage(socket: Socket<DefaultEventsMap, DefaultEventsMap>, key: string, topic: SubscriptionTopic, object: any) {
-    const body = encrypt(object, fromHex(key))
-    hash(key).then(address => {
-        address && socket.send({body: body, topic: topic, destination: address} as SocketMessage)
-    })
-}
+export const broker = new Broker()
 
 export function hash(string) {
     const utf8 = new TextEncoder().encode(string);
@@ -87,7 +119,7 @@ export function randomBytes(size: number) {
 }
 
 export type SocketMessage = {
-    topic: 'subscribe' | SubscriptionTopic,
+    topic: 'subscribe' | 'unsubscribe' | SubscriptionTopic,
     destination?: string,
     body: any
 }

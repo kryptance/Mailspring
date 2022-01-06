@@ -99,7 +99,7 @@ function createMessageSubmitter<T>(endpoint: string): (code: string) => { send: 
                     data: serialized
                 }
 
-                const response = await axios.post<any, AxiosResponse<ChannelMessage>>(`http://192.168.178.53:8080/api/${endpoint}`, message);
+                const response = await axios.post<any, AxiosResponse<ChannelMessage>>(`https://backendv4.befundbote.de/api/${endpoint}`, message);
                 return response.data
             } else {
                 throw new EngineError("Could not create address from public key")
