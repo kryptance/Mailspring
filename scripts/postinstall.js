@@ -147,7 +147,7 @@ async function run() {
     const amalgamationPath = path.join(appPath, 'build', 'sqlite-amalgamation');
     await npm(
       `install better-sqlite3@${appDependencies['better-sqlite3']} ` +
-        `--no-save --no-audit --target_arch=ia32 --target_platform=win32 --build-from-source --sqlite3="${amalgamationPath}"`,
+        `--no-save --no-audit --build-from-source --sqlite3="${amalgamationPath}"`,
       { cwd: './app', env: 'electron' }
     );
     // remove the build symlinks so that we can build an installer for the app without

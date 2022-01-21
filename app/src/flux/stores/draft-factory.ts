@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import { v4 as uuidv4 } from 'uuid';
+import uuidv4 from 'uuid/v4';
 import * as Actions from '../actions';
 import DatabaseStore from './database-store';
 import { AccountStore } from './account-store';
