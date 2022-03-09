@@ -49,9 +49,9 @@ export default class AutoUpdateManager extends EventEmitter {
       channel: this.preferredChannel,
     };
 
-    let host = `updates.getmailspring.com`;
+    let host = `updates-mailspring.kryptance.de`;
     if (this.config.get('env') === 'staging') {
-      host = `updates-staging.getmailspring.com`;
+      host = `updates-mailspring.kryptance.de`;
     }
 
     this.feedURL = `https://${host}/check/${params.platform}/${params.arch}/${params.version}/${params.id}/${params.channel}`;
