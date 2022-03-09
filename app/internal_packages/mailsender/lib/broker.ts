@@ -31,6 +31,14 @@ export class Broker {
             }, 10000);
         })
 
+        this.socket.on("reconnect_failed", () => {
+            this.connect()
+        })
+
+        this.socket.on("disconnect", () => {
+            this.connect()
+        });
+
         this.fnConnect && this.fnConnect()
     }
 

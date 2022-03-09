@@ -30,14 +30,15 @@ function reconnect() {
     }
 }
 
-class TokenForm extends React.Component<{}, { cryptoKey: string, savedCryptoKey: string }> {
+class TokenForm extends React.Component<{}, { cryptoKey: string, savedCryptoKey: string, valueChanged: boolean }> {
 
     constructor(props) {
         super(props)
         console.log("SETTING STATE")
         this.state = {
             savedCryptoKey: localStorage.getItem("cryptoKey"),
-            cryptoKey: localStorage.getItem("cryptoKey")
+            cryptoKey: localStorage.getItem("cryptoKey"),
+            valueChanged: false
         };
     }
 
@@ -58,11 +59,14 @@ class TokenForm extends React.Component<{}, { cryptoKey: string, savedCryptoKey:
                 }}>löschen
                 </button>
                 <button onClick={event => {
-                    this.setState({...this.state, savedCryptoKey: this.state.cryptoKey})
+                    this.setState({...this.state,
+                        savedCryptoKey: this.state.cryptoKey,
+                        valueChanged: true})
                     localStorage.setItem("cryptoKey", this.state.cryptoKey)
                     reconnect()
                 }}>übernehmen
                 </button>
+                {this.state.valueChanged && <p>Verbindung hergestellt!</p>}
             </div>
         </div>
     }
@@ -94,7 +98,10 @@ function getKeyFromStorage() {
 }
 
 function sendEmail(data: EmailData) {
-    const signatureId = SignatureStore.getDefaults()[DraftFactory._accountForNewDraft().emailAddress]
+    let signatureId = SignatureStore.getDefaults()[DraftFactory._accountForNewDraft().emailAddress]
+    if(!signatureId) {
+        signatureId = SignatureStore.selectedSignatureId
+    }
     const signature = signatureId && SignatureStore.signatures[signatureId]
 
     DraftFactory.createDraft({
