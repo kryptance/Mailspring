@@ -1,5 +1,55 @@
 # Mailspring Changelog
 
+## 1.10.3 (4/14/2022)
+
+This release fixes several important issues and moves Mailspring to Electron 18:
+
+- Fix the show original functionality by correctly electron/remote (Thanks @Phylu!)
+
+- Adjust text when messages are hidden after being moved to trash or spam (Thanks @Phylu!)
+
+- Upgrade electron to 18.0.1 and windows-quiet-hours to 2.0.0 in order to fix notifications on windows (Thanks @Phylu!)
+
+- Fix spellchecking by adjusting languages based on the supported hunspell languages (Thanks @Phylu!)
+
+- Updated some wrong auto translations to Spanish (Thanks @Javiermartingonzalez!)
+
+- Fix login to Office 365 Accounts (Thanks @Phylu!)
+
+## 1.10.2 (3/29/2022)
+
+This release fixes an issue with Mailspring's quicklook implementation that surfaced yesterday and could allow for remote code execution using specially crafted attachments. Thanks to `posix` for reporting the issue and @Phylu for the fix.
+
+- This release also improves Mailspring's Turkish localization (Thanks @emintufan!)
+
+## 1.10.1 (3/12/2022)
+
+This release fixes a critical issue in 1.10.0 that caused the app to fail to launch on Windows. This was caused by upstream changes to our AppVeyor build pipeline that changed the default compilation architecture from ia32 to x64 on Windows. We're sorry it took so long to track this down!
+
+- Fixes the "View License" menu item on Windows (Thanks @Phylu!)
+
+- References to "You" in Mailspring now include the label of the relevant account anytime more than one account is present. (Thanks @Phylu!)
+
+## 1.10.0 (2/28/2022)
+
+This release moves Mailspring from Electron 8 to Electron 14 thanks to the hard work of @Phylu and other community members! 🎉 This brings Wayland support on Linux and many performance and security improvements.
+
+- This will allow Mailspring to ship Universal builds for MacOS ARM machines!
+
+- Mailspring now uses the system spellchecker more directly - on MacOS, the spellcheck language is auto-determined as you type.
+
+- We have temporarily removed the ability to reply directly from notification toasts on MacOS, pending futher support for it in Electron.
+
+**Features:**
+
+- The Mailspring snapcraft distribution now loads using LZO, which significantly improves launch performance. (Thanks to @kz6fittycent)
+
+- Mailspring now skips "All Mail" when syncing Protonmail accounts which prevents messages from thrashing between folders and consuming significant CPU. (Thanks to @bl00mber and others!)
+
+- Mailspring now defaults to SSL / TLS on port 465 for SMTP, per RFC 8314 (Thanks to @slokhorst)
+
+- We now go back to inbox after "Remove and show next/previous" for last email (Thanks to @nino)
+
 ### 1.9.2 (9/5/2021)
 
 **Features:**

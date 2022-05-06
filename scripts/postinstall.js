@@ -7,6 +7,7 @@ const fs = require('fs');
 const rimraf = require('rimraf');
 const targz = require('targz');
 const { safeExec } = require('./utils/child-process-wrapper.js');
+const { execSync } = require('child_process');
 
 const appDependencies = require('../app/package.json').dependencies;
 const rootDependencies = require('../package.json').dependencies;
@@ -15,8 +16,8 @@ const npmEnvs = {
   system: process.env,
   electron: Object.assign({}, process.env, {
     npm_config_target: npmElectronTarget,
-    npm_config_arch: process.arch,
-    npm_config_target_arch: process.arch,
+    npm_config_arch: process.platform === 'win32' ? 'ia32' : process.arch,
+    npm_config_target_arch: process.platform === 'win32' ? 'ia32' : process.arch,
     npm_config_disturl: 'https://atom.io/download/electron',
     npm_config_runtime: 'electron',
     npm_config_build_from_source: true,
@@ -35,65 +36,71 @@ function npm(cmd, options) {
         cwd: path.resolve(__dirname, '..', cwd),
         env: npmEnvs[env],
       },
-      err => {
-        return err ? reject(err) : resolve(null);
+      (err, stdout) => {
+        return err ? reject(err) : resolve(stdout);
       }
     );
   });
 }
 
+function getMailsyncURL(callback) {
+  const distKey = `${process.platform}-${process.arch}`;
+  const distDir = {
+    'darwin-x64': 'osx',
+    'darwin-arm64': 'osx',
+    'win32-x64': 'win-ia32', // serve 32-bit since backwards compatibility is great
+    'win32-ia32': 'win-ia32',
+    'linux-x64': 'linux',
+    'linux-ia32': null,
+  }[distKey];
+
+  if (!distDir) {
+    console.error(
+      `\nSorry, a Mailspring Mailsync build for your machine (${distKey}) is not yet available.`
+    );
+    return;
+  }
+
+  const out = execSync('git submodule status ./mailsync');
+  const [_, hash] = /[\+-]([A-Za-z0-9]{8})/.exec(out.toString());
+  callback(
+    `https://mailspring-builds.s3.amazonaws.com/mailsync/${hash}/${distDir}/mailsync.tar.gz`
+  );
+}
+
 function downloadMailsync() {
-  https.get(`https://mailspring-builds.s3.amazonaws.com/stable.txt`, response => {
-    let data = '';
-    response.on('data', d => {
-      data += d;
-    });
-    response.on('end', () => {
-      const head = data.split('-').pop();
-      const distKey = `${process.platform}-${process.arch}`;
-      const distDir = {
-        'darwin-x64': 'osx',
-        'win32-x64': 'win-ia32', // serve 32-bit since backwards compatibility is great
-        'win32-ia32': 'win-ia32',
-        'linux-x64': 'linux',
-        'linux-ia32': null,
-      }[distKey];
-
-      if (!distDir) {
-        console.error(
-          `\nSorry, a Mailspring Mailsync build for your machine (${distKey}) is not yet available.`
-        );
-        return;
-      }
-
-      const distS3URL = `https://mailspring-builds.s3.amazonaws.com/client/${head}/${distDir}/mailsync.tar.gz`;
-      https.get(distS3URL, response => {
-        if (response.statusCode === 200) {
-          response.pipe(fs.createWriteStream(`app/mailsync.tar.gz`));
-          response.on('end', () => {
-            console.log(`\nDownloaded Mailsync build ${distDir}-${head} to ./app/mailsync.tar.gz.`);
-            targz.decompress(
-              {
-                src: `app/mailsync.tar.gz`,
-                dest: 'app/',
-              },
-              err => {
-                if (!err) {
-                  console.log(`\nUnpackaged Mailsync build.`);
-                } else {
-                  console.error(`\nEncountered an error unpacking: ${err}`);
-                }
-              }
-            );
-          });
-        } else {
-          console.error(
-            `Sorry, an error occurred while fetching the Mailspring Mailsync build for your machine\n(${distS3URL})\n`
+  getMailsyncURL(distS3URL => {
+    https.get(distS3URL, response => {
+      if (response.statusCode === 200) {
+        response.pipe(fs.createWriteStream(`app/mailsync.tar.gz`));
+        response.on('end', () => {
+          console.log(
+            `\nDownloaded Mailsync prebuilt binary from ${distS3URL} to ./app/mailsync.tar.gz.`
           );
-          response.pipe(process.stderr);
-          response.on('end', () => console.error('\n'));
+          targz.decompress(
+            {
+              src: `app/mailsync.tar.gz`,
+              dest: 'app/',
+            },
+            err => {
+              if (!err) {
+                console.log(`\nUnpackaged Mailsync into ./app.`);
+              } else {
+                console.error(`\nEncountered an error unpacking: ${err}`);
+              }
+            }
+          );
+        });
+      } else {
+        console.error(
+          `Sorry, an error occurred while fetching the Mailspring Mailsync build for your machine\n(${distS3URL})\n`
+        );
+        if (process.env.CI) {
+          throw new Error('Mailsync build not available.');
         }
-      });
+        response.pipe(process.stderr);
+        response.on('end', () => console.error('\n'));
+      }
     });
   });
 }
@@ -145,14 +152,23 @@ async function run() {
     rimraf.sync(path.join(appModulesPath, 'better-sqlite3'));
     // install the module pointing to our local sqlite source with custom #DEFINEs set
     const amalgamationPath = path.join(appPath, 'build', 'sqlite-amalgamation');
-    await npm(
+    const resp = await npm(
       `install better-sqlite3@${appDependencies['better-sqlite3']} ` +
         `--no-save --no-audit --build-from-source --sqlite3="${amalgamationPath}"`,
       { cwd: './app', env: 'electron' }
     );
+    console.log(`better-sqlite stdout: ${resp}`);
+
     // remove the build symlinks so that we can build an installer for the app without
     // symlinks out to the sqlite-amalgamation directory.
     rimraf.sync(path.join(appModulesPath, 'better-sqlite3', 'build', 'Release', 'obj'));
+
+    if (!fs.existsSync(path.join(appModulesPath, 'better-sqlite3', 'build', 'Release'))) {
+      console.error(`better-sqlite did not recompile successfully!`);
+      process.exit(1001);
+    } else {
+      console.error(`better-sqlite recompiled successfully!`);
+    }
   }
 
   // if SQlite was STILL not built with HAVE_USLEEP, do not ship this build! We need usleep
@@ -167,11 +183,17 @@ async function run() {
   // write the marker with the electron version
   fs.writeFileSync(cacheVersionPath, npmElectronTarget);
 
-  // if the user hasn't cloned the private mailsync module, download
+  // if the user hasn't cloned the mailsync module, download
   // the binary for their operating system that was shipped to S3.
   if (!fs.existsSync('./mailsync/build.sh')) {
     console.log(`\n-- Downloading the last released version of Mailspring mailsync --`);
     downloadMailsync();
+  } else {
+    console.log(
+      `\n-- You have the Mailspring mailsync submodule. If you'd prefer ` +
+        `to develop with a pre-built binary, remove the submodule and re-run ` +
+        `'npm run postinstall' to download the latest binary for your machine. --`
+    );
   }
 }
 
